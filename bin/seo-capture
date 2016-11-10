@@ -20,8 +20,8 @@ parser.add_argument('--filters', '-f', help="The list of filters to be used for 
                     default="clear", type=str, nargs='+')
 parser.add_argument('--binning', '-b', help="The desired CCD binning",
                     default=2, type=int)
-parser.add_argument('--no-dark', '-nd', help="Do not take dark frames")
-parser.add_argument('--no-bias', '-nb', help="Do not take bias frames")
+parser.add_argument('--no_dark', '-nd', help="Do not take dark frames", default=False, action="store_true")
+parser.add_argument('--no_bias', '-nb', help="Do not take bias frames", default=False, action="store_true")
 
 
 # Parse arguments
@@ -33,7 +33,9 @@ s = Session.Session(targets = args.targets,
                     exposure_count = args.exposure_count,
                     filters = args.filters,
                     binning = args.binning,
-                    user = os.environ['USER'])
+                    user = os.environ['USER'],
+                    nodark = args.no_dark,
+                    nobias = args.no_bias)
 
 # execute the session
 s.execute()
