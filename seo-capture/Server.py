@@ -81,11 +81,11 @@ class Server(object):
         while True:
             message = json.loads(self.socket.recv_json())
             if message["magic"] == self.magic:
-                self.__log("Received imaging request from a client...")
+                self.__log("Received imaging request from {}...".format(message["user"]))
                 self.save_request(message)
                 self.socket.send_string(str(self.magic))
             elif message["magic"] == self.magic_admin:
-                self.__log("Received message from a client...")
+                self.__log("Received message from {}...".format(message["user"]))
                 self.process_message(message)
                 self.socket.send_string(str(self.magic_admin))
             else:

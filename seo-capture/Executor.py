@@ -21,6 +21,9 @@ class Executor(object):
         self.sessions = []
         self.load_queue(self.filename)
 
+        # create a handler for SIGINT
+        signal.signal(signal.SIGINT, self.handle_exit)
+
         
     def load_queue(self, filename: str) -> list:
         """ This loads a JSON queue file into a list of Python session
@@ -61,4 +64,16 @@ class Executor(object):
         """ Prints a log message to STDOUT. Returns True if successful, False
         otherwise.
         """
-        return Util.log(msg, color)    
+        return Util.log(msg, color)
+
+
+    def handle_exit(self, signal, frame):
+        """ SIGINT handler to check for Ctrl+C for quitting the executor. 
+        """
+        print("\033[1;31mAre you sure you would like to quit [y/n]?\033[0m")
+        choice = input().lower()
+        if choice == "y" or choice == "Y":
+            print("\033[1;31mQuitting executor and closing the dome...\033[0m")
+            if len(self.sessions) > 0:
+                self.session[0].telescope.close_dome()
+            sys.exit(0)
