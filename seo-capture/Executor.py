@@ -1,6 +1,8 @@
 import json
 import time
 import typing
+import Util
+import Session
 
 class Executor(object):
     """ This class is responsible for executing and scheduling a 
@@ -16,13 +18,47 @@ class Executor(object):
         self.filename = filename
 
         # load queue from disk
-        self.sessions = self.load_queue(self.filename)
-        print(self.sessions)
+        self.sessions = []
+        self.load_queue(self.filename)
 
         
     def load_queue(self, filename: str) -> list:
         """ This loads a JSON queue file into a list of Python session
         objects that can then be executed. 
         """
+
+        def json_to_session(msg) -> Session:
+            """ Converts the dictionary representation of a queue request
+            into a Session object. """
+            s = Session.Session(targets = msg['targets'],
+                        exposure_time = msg['exposure_time'], 
+                        exposure_count = msg['exposure_count'], 
+                        filters = msg['filters'], 
+                        binning = msg['binning'],
+                        user = msg['user'])
+            return s
+                    
         with open(self.filename) as queue:
-            return json.load(queue)
+            for line in queue:
+                self.sessions.append(json_to_session(json.loads(line)))
+
+    def execute_queue(self) -> bool:
+        """ Executes the list of session objects for this queue. 
+        """
+        count = 1
+        for session in self.sessions:
+            # check whether every session executed correctly
+            self.__log("Executing session: {}".format(count), color="cyan")
+            if not session.execute():
+                return False
+            count += 1
+
+        return True
+
+
+
+    def __log(self, msg: str, color: str = "white") -> bool:
+        """ Prints a log message to STDOUT. Returns True if successful, False
+        otherwise.
+        """
+        return Util.log(msg, color)    

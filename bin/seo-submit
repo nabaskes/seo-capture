@@ -42,9 +42,9 @@ msg['magic'] = magic
 msg['targets'] = args.targets
 msg['exposure_time'] = args.exposure_time
 msg['exposure_count'] = args.exposure_count
-msg['filter'] = args.filters
+msg['filters'] = args.filters
 msg['binning'] = args.binning
-msg['user'] = os.environ['HOME']
+msg['user'] = os.environ['USER']
 
 # Send imaging request
 socket.send_json(json.dumps(msg))

@@ -64,6 +64,7 @@ class Server(object):
         choice = input().lower()
         if choice == "y" or choice == "Y":
             print("\033[1;31mQuitting server...\033[0m")
+            self.file.close()
             sys.exit(0)
         
     def __del__(self):
@@ -119,7 +120,7 @@ class Server(object):
         into the queue file. 
         """
         self.file = open(self.filename, "a")
-        self.file.write(str(msg)+"\n")
+        self.file.write(json.dumps(msg)+"\n")
         self.file.close()
 
     def process_message(self, msg: str) -> list:

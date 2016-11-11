@@ -57,7 +57,7 @@ class Session(object):
 
         # Whether I, R, G filters should be used 
         self.filters = filters
-        self.__log("Using filters: "+str(self.filters))
+        self.__log("Filters: "+str(self.filters))
 
         # What binning to use
         self.binning = binning
@@ -67,7 +67,7 @@ class Session(object):
         self.telescope = Telescope.Telescope()
 
         
-    def execute(self) -> int: 
+    def execute(self) -> bool: 
         """ Starts the execution of the imaging session; return's status
         once imaging run is completed. 
         """
@@ -81,6 +81,9 @@ class Session(object):
 
             # enable tracking again as a precaution
             self.telescope.enable_tracking()
+
+            # open dome again as a precaution
+            self.telescope.open_dome()
 
             # check whether object is visible, and try slewing the
             # telescope to point at object
@@ -126,8 +129,8 @@ class Session(object):
                 filename = str(target)+"_dark"+base_name+str(n)+"_seo"
                 self.telescope.take_dark(filename)
 
-            # take exposure count biases
-            for n in range(10*self.exposure_count):
+            # take 5*exposure_count biases
+            for n in range(5*self.exposure_count):
                 filename = str(target)+"_bias"+base_name+str(n)+"_seo"
                 self.telescope.take_bias(filename)
 
