@@ -20,7 +20,9 @@ class Session(object):
                  exposure_count: int = 1,
                  filters: List[str] = ["clear"],
                  binning: int = 2,
-                 user: str = ""):
+                 user: str = "",
+                 nodark: bool = False, 
+                 nobias: bool = False):
         """ Creates a new imaging session with desired parameters.
 
         Creates a new imaging session that will image each target with exposure_count 
@@ -64,7 +66,7 @@ class Session(object):
         self.__log("CCD Binning: "+str(self.binning))
 
         # assign the telescope
-        self.telescope = Telescope.Telescope()
+        self.telescope = Telescope.Telescope(nodark=nodark, nobias=nobias)
 
         
     def execute(self) -> bool: 

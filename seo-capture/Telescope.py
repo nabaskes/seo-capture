@@ -7,9 +7,10 @@ import Util
 
 class Telescope(object):
 
-    def __init__(self):
+    def __init__(self, nodark: bool = False, nobias: bool = False):
         # something here?
-        pass
+        self.nodark = nodark
+        self.nobias = nobias
 
     def open_dome(self) -> bool:
         """ Checks that the weather is acceptable, and then opens the dome, 
@@ -145,11 +146,13 @@ class Telescope(object):
         """ Takes a bias frame and saves it in the FITS file with the specified
         filename. Returns True if imaging was successful, False otherwise. 
         """
-        cmd = "image time=0.5 bin="+self.binning+" "
-        cmd += "outfile="+filename+"_bias.fits"
-        status = self.__run_command(cmd)
-        self.__log("Saved bias frame to "+filename, color="cyan")
-        return status
+        if not self.nobias:
+            cmd = "image time=0.5 bin="+self.binning+" "
+            cmd += "outfile="+filename+"_bias.fits"
+            status = self.__run_command(cmd)
+            self.__log("Saved bias frame to "+filename, color="cyan")
+            return status
+        return True
 
     
     def take_dark(self, filename: str) -> bool:
@@ -158,11 +161,13 @@ class Telescope(object):
         FITS file with the specified filename. Returns True if imaging
         was successful, False otherwise. 
         """
-        cmd = "image time="+self.exposure_time+" bin="+self.binning+" dark "
-        cmd += "outfile="+filename+"_dark.fits"
-        status = self.__run_command(cmd)
-        self.__log("Saved dark frame to "+filename, color="cyan")
-        return status
+        if not self.nodark:
+            cmd = "image time="+self.exposure_time+" bin="+self.binning+" dark "
+            cmd += "outfile="+filename+"_dark.fits"
+            status = self.__run_command(cmd)
+            self.__log("Saved dark frame to "+filename, color="cyan")
+            return status
+        return True
 
     
     def enable_tracking(self) -> bool:
