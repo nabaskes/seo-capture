@@ -22,7 +22,8 @@ class Session(object):
                  binning: int = 2,
                  user: str = "",
                  nodark: bool = False, 
-                 nobias: bool = False):
+                 nobias: bool = False,
+                 offsets: str = ""):
         """ Creates a new imaging session with desired parameters.
 
         Creates a new imaging session that will image each target with exposure_count 

@@ -53,20 +53,30 @@ class Telescope(object):
 
         # sun is good - check for weather
         weather = self.__run_command("tx taux")
+        #meteorology = self.__run_command("tx mets")
 
         # if this cmd failed, return false to be safe
         if weather == None or weather == "":
             return False
+        # if meteorology == None or meteorology == "":
+            # return False
         
         rain = 1 # default to being raining just in case
         cloud = 1 # default to being cloudy just in case
+        # humidity = 100 # default to being 100% humid just in case
         rain = float(find_value("rain", weather)) # find rain=val
         cloud = float(find_value("cloud", weather)) # find cloud=val
+        # humidity = float(find_value("humidity", meteorology)) # find humidity=val
 
         if rain == 0 and cloud < 0.4:
             return True
         else:
             return False
+        
+        # if humidity < 90:
+        #   return True
+        # else:
+        #   return False
 
     
     def dome_status(self) -> str:
@@ -88,25 +98,38 @@ class Telescope(object):
         telescope (failure, object not visible).
         """
         if self.__target_visible(target) == True:
-            cmd = "catalog "+target+" | dopoint"
-            return self.__run__command(cmd)
+            # Check if we're using coordinates or target names
+            if not target.contains(","):
+                cmd = "catalog "+target+" | dopoint"
+                return self.__run__command(cmd)
+
+            else:
+                cmd = "tx point ra="+target[1]+" dec="+target[2]+" equinox="+target[3]
+                return self.__run_command(cmd)
 
         return False
-
-    
+                    
     def target_visible(self, name: str) -> bool:
-        # JUST AN IDEA
         """ Checks whether a target is visible, and whether it is > 40 degrees
         in altitude. Returns True if visible and >40, False otherwise
         """
-        cmd = "catalog "+target+" | altaz"
-        altaz = self.__run_command(cmd).split()
-        if float(find_value("alt", altaz)) >= 40:
-            return True
+        # Check if we're using coordinates or target names
+        if not target.contains(","):
+            cmd = "catalog "+target+" | altaz"
+            altaz = self.__run_command(cmd).split()
+            if float(find_value("alt", altaz)) >= 40:
+                return True
+            return False
 
-        return False
+        else:
+            target.split(",")
+            cmd = "ra="+target[0]+" dec="+target[1]+" equinox="+target[2]+" | altaz"
+            altaz = self.__run_command(cmd).split()
+            if float(find_value("alt", altazs)) >= 40:
+                return True
+            return False
 
-    
+
     def current_filter(self) -> str:
         """ Returns the name of the currently enabled filter, or
         clear otherwise. 
@@ -115,7 +138,6 @@ class Telescope(object):
 
     
     def change_filter(self, name: str) -> str:
-        # JUST AN IDEA
         """ Changes filter to the new specified filter. Options are: 
         u, g, r, i, z, clear, h-alpha. Returns True if successful, 
         False otherwise
@@ -129,7 +151,6 @@ class Telescope(object):
 
     
     def take_exposure(self, filename: str) -> bool:
-        # Juat an idea
         """ Takes an exposure of length self.exposure_time saves it in the FITS 
         file with the specified filename. Returns True if imaging
         was successful, False otherwise. 
@@ -142,7 +163,6 @@ class Telescope(object):
 
     
     def take_bias(self, filename: str) -> bool:
-        # JUST AN IDEA
         """ Takes a bias frame and saves it in the FITS file with the specified
         filename. Returns True if imaging was successful, False otherwise. 
         """
@@ -156,7 +176,6 @@ class Telescope(object):
 
     
     def take_dark(self, filename: str) -> bool:
-        ## AMANDA, THIS IS JUST AN IDEA - WORTH A REWRITE
         """ Takes an dark exposure of length self.exposure_time saves it in the
         FITS file with the specified filename. Returns True if imaging
         was successful, False otherwise. 
@@ -171,8 +190,7 @@ class Telescope(object):
 
     
     def enable_tracking(self) -> bool:
-        pass
-
+        return self.__run_command("tx track on")
     
     def focus(self) -> bool:
         pass
@@ -184,8 +202,18 @@ class Telescope(object):
 
     
     def offset(self) -> bool:
-        pass
-    
+        """Checks whether an offset has been entered and offsets the telescope. 
+            Offset units are in degrees.
+        """
+        if self.offsets != "":
+            if self.offsets.contains(","):
+                self.offsets.split(",")
+                cmd = "tx offset dec="+offsets[1]+" ra="+offsets[0]+" cos"
+                return self.__run_command(cmd)
+            else:
+                return False
+        else:
+            pass
 
     def __log(self, msg: str, color: str = "white") -> bool:
         """ Prints a log message to STDOUT. Returns True if successful, False
