@@ -1,3 +1,7 @@
 ## PACKAGE DEPENDENCIES
 zmq
+flask
+pyyaml
+typing
+
 

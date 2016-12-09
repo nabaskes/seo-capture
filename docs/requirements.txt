@@ -1,4 +1,0 @@
-# Dependencies for documentation generation
-pdoc
-mako
-markdown

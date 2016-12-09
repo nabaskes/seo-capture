@@ -6,6 +6,8 @@ import typing
 import signal
 import sys
 import json
+import yaml
+import os
 
 class Server(object):
     """ This class represents a server that listens for queueing requests from 
@@ -13,7 +15,7 @@ class Server(object):
     adds the request to the queue.
     """
 
-    def __init__(self, port: int = 27748, queuename: str = ""):
+    def __init__(self, port: int = 0, queuename: str = ""):
         """ This creates a new server listening on the specified port; this does
         not start the server listening, it just creates the server. start() must
         be called for the server to be initialized. 
@@ -21,18 +23,31 @@ class Server(object):
         port: the port to listen on
         queuename: string to be prepended to the imaging queuelog
         """
+
+        if os.path.isfile("config.yaml"):
+            stream = open("config.yaml", 'r')
+            config = yaml.load(stream)
+        else:
+            exit("\033[1;31mUnable to find config.yaml. Exiting...\033[0m")
+            
         self.__log("Creating new queue server...", color="green")
         # the port to be used for communication
-        self.port = str(port)
+        if port == 0:
+            self.port = config["server"]["port"]
+        else:
+            self.port = port
 
         # magic number for imaging requests
-        self.magic = 392919
+        self.magic = config["server"]["request_magic"]
 
         # magic number for admin requests
-        self.magic_admin = 1224580
+        self.magic_admin = config["server"]["admin_magic"]
 
         # whether we are enabled
-        self.enabled = False
+        if config["server"]["default"] == "on":
+            self.enabled = True
+        else:
+            self.enabled = False
 
         # zeroMQ context
         self.context = zmq.Context()
@@ -45,8 +60,9 @@ class Server(object):
         self.__log("Bound server to socket %s" % self.port)
 
         # file name for JSON store
+        qdir = config["server"]["queue_dir"]
         currdate = time.strftime("%Y-%m-%d", time.gmtime())
-        self.filename = queuename+currdate+"_imaging_queue.json"
+        self.filename = qdir+"/"+queuename+currdate+"_imaging_queue.json"
         self.file = open(self.filename, 'w')
         if self.file is None:
             self.__log("Unable to open queue!", color="red")

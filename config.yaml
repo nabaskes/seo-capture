@@ -1,0 +1,11 @@
+server:
+    port: 27748
+    admin_magic: 1224580
+    request_magic: 392919
+    queue_dir: queue/
+    default: on
+    
+executor:
+    queue_dir: queue/
+    
+    
