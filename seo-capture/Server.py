@@ -8,6 +8,7 @@ import sys
 import json
 import yaml
 import os
+import requests
 
 class Server(object):
     """ This class represents a server that listens for queueing requests from 
@@ -97,10 +98,23 @@ class Server(object):
 
 
     #gets twilight for the given day
-    #TODO set this at the very least to vary by month
-    def getTwilightToday(self):
-        #eventually this should be something clever
-        return time.struct_time(1993,4,20,18,0,0,0,5,1)
+    def getTwilightToday(self,day):
+        urllist = []
+        urllist.append("aa.usno.navy.mil/rstt/onedaytable?ID=AA?year=")
+        urllist.append(str(day[0]))
+        urllist.append("&month=")
+        urllist.append(str(day[1]))
+        urllist.append("&day=")
+        urllist.append(str(day[2]))
+        urllist.append("&state=CA&place=Sonoma")
+        url = ''.join(urllist)
+        r = requests.get(url)
+        navypage = text
+        #EG http://aa.usno.navy.mil/rstt/onedaytable?ID=AA&year=2016&month=12&day=15&state=CA&place=Sonoma
+        
+
+        return time.struct_time(day[0],day[1],day[2],18,0,0,day[6],day[7],day[8])
+        
 
     #checks if it is currently later than twilight
     def laterThanTwilight(self):
