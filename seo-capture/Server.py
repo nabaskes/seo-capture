@@ -28,7 +28,7 @@ class Server(object):
             stream = open("config.yaml", 'r')
             config = yaml.load(stream)
         else:
-            exit("\033[1;31mUnable to find config.yaml. Exiting...\033[0m")
+            exit("\033[1;31mServer unable to find config.yaml. Exiting...\033[0m")
             
         self.__log("Creating new queue server...", color="green")
         # the port to be used for communication
@@ -69,6 +69,11 @@ class Server(object):
         self.__log("Storing queue in %s" % self.filename)
         self.file.close()
 
+        #twilight for the day and time functions
+        time.timezone = 8*3600 #Sonoma, Cali is UTC-8
+        self.twilight = self.getTwilightToday()
+        self.closedqueue = False
+
         # create a handler for SIGINT
         signal.signal(signal.SIGINT, self.handle_exit)
         
@@ -89,12 +94,114 @@ class Server(object):
         """
         pass
 
+
+
+    #gets twilight for the given day
+    #TODO set this at the very least to vary by month
+    def getTwilightToday(self):
+        #eventually this should be something clever
+        return time.struct_time(1993,4,20,18,0,0,0,5,1)
+
+    #checks if it is currently later than twilight
+    def laterThanTwilight(self):
+        lt = time.localtime
+        tw = self.twilight
+        #this is ugly, should write a comparison function for struct_time objects
+        if(lt[3]>tw[3] or (lt[3]==tw[3] and (lt[4]>tw[4] or (lt[4]==tw[4] and lt[5]>tw[5])))):
+            return True
+        return False
+
+
+    
+
+    #given a struct_time object, increments it by one day
+    #this function is super gross...
+    def incrementDay(day):
+        if(day[1]==1):
+            if(day[2]==31):
+                return time.struct_time(day[0],2,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],1,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        elif(day[1]==2):
+            if(day[2]==29):
+                return time.struct_time(day[0],3,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            elif(day[2]==28):
+                if(day[0]%4==0):
+                    return time.struct_time(day[0],2,29,day[3],day[4],day[5],day[6],day[7],day[8])
+                return time.struct_time(day[0],3,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],2,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        elif(day[1]==3):
+            if(day[2]==31):
+                return time.struct_time(day[0],4,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],3,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        elif(day[1]==4):
+            if(day[2]==30):
+                return time.struct_time(day[0],5,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],4,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        elif(day[1]==5):
+            if(day[2]==31):
+                return time.struct_time(day[0],6,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],5,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        elif(day[1]==6):
+            if(day[2]==30):
+                return time.struct_time(day[0],7,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],6,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        elif(day[1]==7):
+            if(day[2]==31):
+                return time.struct_time(day[0],8,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],7,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        elif(day[1]==8):
+            if(day[2]==31):
+                return time.struct_time(day[0],9,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],8,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        elif(day[1]==9):
+            if(day[2]==30):
+                return time.struct_time(day[0],10,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],9,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        elif(day[1]==10):
+            if(day[2]==31):
+                return time.struct_time(day[0],11,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],10,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        elif(day[1]==11):
+            if(day[2]==30):
+                return time.struct_time(day[0],12,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],11,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        else: #assuming this means it is december
+            if(day[2]==31):
+                return time.struct_time(day[0]+1,1,day[3],day[4],day[5],day[6],day[7],day[8])
+            return time.struct_time(day[0],12,day[2]+1,day[3],day[4],day[5],day[6],day[7],day[8])
+        ###END FUNCTION incrementDay()###############
+
+                
+
+    #creates the queue file for the next day
+    def queueNextDay(self):
+        qdir = config["server"]["queue_dir"]
+        currdate = time.strftime("%Y-%m-%d", incrementDay(time.gmtime()))
+        self.filename = qdir+"/"+queuename+currdate+"_imaging_queue.json"
+        self.file = open(self.filename, 'w')
+        if self.file is None:
+            self.__log("Unable to open queue!", color="red")
+        self.__log("Storing queue in %s" % self.filename)
+        self.file.close()
+
+
+
         
     def start(self):
         """ Starts the servers listening for new requests; server blocks
         on the specified port until it receives a request
         """
         while True:
+            laterthantwilight = self.laterThanTwilight()
+            if(laterthantwilight and not self.closedqueue):
+                self.queueNextDay()
+                self.closedqueue = True
+            elif(self.closedqueue and not laterthantwilight):
+                #it is now the next day
+                self.twilight = self.getTwilightToday()
+                self.closedqueue = False
+
+            
             message = json.loads(self.socket.recv_json())
             if message["magic"] == self.magic:
                 self.__log("Received imaging request from {}...".format(message["user"]))

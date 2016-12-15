@@ -3,6 +3,8 @@ import time
 import typing
 import Util
 import Session
+import time
+import yaml
 
 class Executor(object):
     """ This class is responsible for executing and scheduling a 
@@ -14,8 +16,26 @@ class Executor(object):
         list of Sessions stored in the JSON file specified by filename. 
         """
 
-        # filename to be read
-        self.filename = filename
+        if os.path.isfile("config.yaml"):
+            stream = open("config.yaml",'r')
+            config = yaml.load(stream)
+        else:
+            exit("\033[1;31mExecutor unable to find config.yaml.  Exiting.\033[0m")
+
+        if(filename):
+            self.filename=filename
+        else:
+            # filename to be read.  This is based on the date
+            qdir = config["server"]["queue_dir"]
+            currdate = time.strftime("%Y-%m-%d", time.gmtime())
+            queuename = "testqname" #set so specified queue can work, but we
+            #are allowed to choose in Server.py so we should be able
+            #to do this here, that is, somehow sync them
+            self.filename = qdir+"/"+queuename+currdate+"_imaging_queue.json"
+        
+
+
+        
 
         # load queue from disk
         self.sessions = []
