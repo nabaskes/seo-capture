@@ -98,7 +98,7 @@ class Server(object):
 
 
     #gets twilight for the given day
-    def getTwilightToday(self,day):
+    def getTwilightToday(day):
         urllist = []
         urllist.append("aa.usno.navy.mil/rstt/onedaytable?ID=AA?year=")
         urllist.append(str(day[0]))
@@ -109,7 +109,8 @@ class Server(object):
         urllist.append("&state=CA&place=Sonoma")
         url = ''.join(urllist)
         r = requests.get(url)
-        navypage = text
+        hour = int(r.text[2581:2582])+12
+        minute = int(r.text[2583:2585])    #<--- this fails currently as there is slight variance in length of page
         #EG http://aa.usno.navy.mil/rstt/onedaytable?ID=AA&year=2016&month=12&day=15&state=CA&place=Sonoma
         
 
